@@ -8,7 +8,7 @@ ESP32_IP = '192.168.107.3'
 PORT = 10000
 NOTE_PRESSES = [60, 62, 64]
 
-def run_client(): #CALLED WHEN GUI IS CALLED, SHOULD RUN IN THE BACKGROUND
+def run_client(): #CALLED WHEN GUI IS CALLED, SHOULD RUN IN THE BACKGROUND AS THREAD
     synth = sound.Synth()
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((ESP32_IP, PORT))
@@ -27,6 +27,12 @@ def run_client(): #CALLED WHEN GUI IS CALLED, SHOULD RUN IN THE BACKGROUND
             if message.split()[0] == "press":
                 print("Note press on sensor", message.split()[1])
                 threading.Thread(target=synth.play_note, args=(NOTE_PRESSES[int(message.split()[1])],)).start() #SHOULD BE SENT TO METHOD IN GUI INSTEAD, GUI CHOOSES NOTE TO PLAY
+            elif message == "swipe left":
+                print("Hand swipe left") 
+                #GUI method
+            elif message == "swipe right":
+                print("Hand swipe right") 
+                #GUI method
             elif message.split()[0] == "disconnected":
                 print("Sensor", message.split()[1], "is disconnected, check wiring and reset.")
     except KeyboardInterrupt:
