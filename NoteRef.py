@@ -7,7 +7,7 @@ SCALE_MAPPINGS = {'major': [[0,2,4,5,7], [0,4,7,11,12], [5,7,9,10,12]],
                   'minor': [[0,2,3,5,7], [0,3,7,8,12], [5,7,8,10,12]]}
 #SCALE_STEPPING = {'major': [0,2,4,5,7,9,11,12], 'minor': [0,2,3,5,7,8,10,12]}
 
-if __name__ == "__main__":
+if __name__ == "__main__": #REFERENCE FOR HOW FINGER MAPPINGS WORK
     synth = sound.Synth()
 
     key = "G major" #Needs to correspond to the key of the generated music
