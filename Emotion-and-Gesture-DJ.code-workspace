@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "Emotion-and-Gesture-DJ",
+			"path": "."
+		},
+		{
+			"name": ".venv",
+			"path": "../../../../Documents/GitHub/Audio-Test/.venv"
+		}
+	],
+	"settings": {}
+}
