@@ -9,5 +9,8 @@ Libraries used in the project:
 
 How to run the project:
 download the project onto your computer
-In an environment with python 3.10.11
-run pip install -r requirements.txt
+- In an environment with python 3.10.11
+- run pip install -r requirements.txt
+
+Additional Resources
+https://github.com/facebookresearch/audiocraft?tab=readme-ov-file
