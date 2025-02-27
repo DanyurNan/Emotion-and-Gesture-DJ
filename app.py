@@ -6,16 +6,27 @@ from audiocraft.data.audio import audio_write
 import tempfile
 import os
 import concurrent.futures
+import socket
+import threading
+import sound
+import keyboard
 
-st.title("Emotion & Gesture Controlled DJ")
+# Constants for ESP32 communication
+ESP32_IP = '192.168.217.79'
+PORT = 10000
+NOTE_PRESSES = [60, 62, 64]
 
+# Streamlit App Title
+st.title("Emotion & Gesture Driven Music Performance")
+
+# Initialize webcam using Streamlit’s built-in camera input
 photo = st.camera_input("Take a Photo")
 
 # Load MusicGen Model (Cached for Speed)
 @st.cache_resource
 def load_model():
     model = MusicGen.get_pretrained("facebook/musicgen-small")
-    model.set_generation_params(duration=7) 
+    model.set_generation_params(duration=7)  # Faster generation (7 seconds)
     return model
 
 model = load_model()
@@ -46,6 +57,49 @@ def generate_music(description, output_dir="generated_music"):
         return output_path  # Return the file path
     except Exception as e:
         return None  # Return None if music generation fails
+    
+
+# ESP32 Client Function (Runs in Background)
+def run_client():
+    """Runs in the background to communicate with ESP32."""
+    synth = sound.Synth()
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((ESP32_IP, PORT))
+    print("Connected to ESP32 server")
+
+    try:
+        while True:
+            if keyboard.is_pressed('space'):
+                data = "r"
+                print("Resetting sensors")
+                client_socket.send(data.encode())
+            data = client_socket.recv(1024)
+            if not data:
+                break
+            message = data.decode().strip()
+            if message.split()[0] == "press":
+                print("Note press on sensor", message.split()[1])
+                # Update session state with the note to play
+                st.session_state["note_to_play"] = NOTE_PRESSES[int(message.split()[1])]
+            elif message == "swipe left":
+                print("Hand swipe left")
+                # Trigger a GUI method (e.g., change emotion)
+                st.session_state["swipe_direction"] = "left"
+            elif message == "swipe right":
+                print("Hand swipe right")
+                # Trigger a GUI method (e.g., change emotion)
+                st.session_state["swipe_direction"] = "right"
+            elif message.split()[0] == "disconnected":
+                print("Sensor", message.split()[1], "is disconnected, check wiring and reset.")
+    except KeyboardInterrupt:
+        print("Connection closed by client")
+    client_socket.close()
+
+# Start the ESP32 client in a background thread
+if "client_thread" not in st.session_state:
+    st.session_state.client_thread = threading.Thread(target=run_client, daemon=True)
+    st.session_state.client_thread.start()
+    
 
 # Streamlit UI Logic
 if photo:
@@ -91,3 +145,15 @@ if photo:
                 st.audio(audio_file, format='audio/wav')
             else:
                 st.error("Failed to generate music. Please try again.")
+                
+# Handle ESP32 events in the UI
+if "note_to_play" in st.session_state:
+    st.write(f"Playing note: {st.session_state.note_to_play}")
+    # Call a method to play the note (e.g., using a sound library)
+    # synth.play_note(st.session_state.note_to_play)
+    del st.session_state["note_to_play"]  # Clear the note after playing
+
+if "swipe_direction" in st.session_state:
+    st.write(f"Hand swipe detected: {st.session_state.swipe_direction}")
+    # Trigger a GUI action based on swipe direction
+    del st.session_state["swipe_direction"]  # Clear the swipe direction after handling
