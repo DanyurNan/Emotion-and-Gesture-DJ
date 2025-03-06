@@ -11,6 +11,7 @@ import threading
 import sound
 import keyboard
 
+
 # Constants for ESP32 communication
 ESP32_IP = '192.168.217.79'
 PORT = 10000
