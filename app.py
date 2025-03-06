@@ -7,15 +7,29 @@ import tempfile
 import os
 import concurrent.futures
 import socket
+import time
 import threading
 import sound
 import keyboard
 
 
 # Constants for ESP32 communication
-ESP32_IP = '192.168.217.79'
+ESP32_IP = '192.168.26.79'
 PORT = 10000
 NOTE_PRESSES = [60, 62, 64]
+
+# Musical Key and Scale Mappings
+KEY_OFFSET = {'C': 48, 'D': 50, 'E': 52, 'F': 53, 'G': 55, 'A': 57, 'B': 59}
+SCALE_MAPPINGS = {
+    'major': [[0, 2, 4, 5, 7], [0, 4, 7, 11, 12], [5, 7, 9, 10, 12]],
+    'minor': [[0, 2, 3, 5, 7], [0, 3, 7, 8, 12], [5, 7, 8, 10, 12]]
+}
+
+# Initialize Scale and Base Note
+base_note = KEY_OFFSET['C']
+scale = 'major'
+mapping = SCALE_MAPPINGS[scale][0]
+
 
 # Streamlit App Title
 st.title("Emotion & Gesture Driven Music Performance")
@@ -62,45 +76,44 @@ def generate_music(description, output_dir="generated_music"):
 
 # ESP32 Client Function (Runs in Background)
 def run_client():
-    """Runs in the background to communicate with ESP32."""
+    """Handles ESP32 communication in a background thread."""
+    global mapping
     synth = sound.Synth()
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((ESP32_IP, PORT))
     print("Connected to ESP32 server")
-
     try:
         while True:
             if keyboard.is_pressed('space'):
-                data = "r"
+                client_socket.send("r".encode())
                 print("Resetting sensors")
-                client_socket.send(data.encode())
             data = client_socket.recv(1024)
             if not data:
                 break
             message = data.decode().strip()
-            if message.split()[0] == "press":
-                print("Note press on sensor", message.split()[1])
-                # Update session state with the note to play
-                st.session_state["note_to_play"] = NOTE_PRESSES[int(message.split()[1])]
+            if message.startswith("press"):
+                sensor_index = int(message.split()[1])
+                note_to_play = base_note + mapping[sensor_index]
+                threading.Thread(target=synth.play_note, args=(note_to_play,)).start()
+                st.session_state["note_to_play"] = note_to_play
             elif message == "swipe left":
-                print("Hand swipe left")
-                # Trigger a GUI method (e.g., change emotion)
-                st.session_state["swipe_direction"] = "left"
+                mapping = SCALE_MAPPINGS[scale][0]
             elif message == "swipe right":
-                print("Hand swipe right")
-                # Trigger a GUI method (e.g., change emotion)
-                st.session_state["swipe_direction"] = "right"
-            elif message.split()[0] == "disconnected":
-                print("Sensor", message.split()[1], "is disconnected, check wiring and reset.")
+                mapping = SCALE_MAPPINGS[scale][2]
+            elif message == "swipe forward":
+                mapping = SCALE_MAPPINGS[scale][1]
+            elif message.startswith("disconnected"):
+                sensor_id = message.split()[1]
+                print(f"Sensor {sensor_id} is disconnected. Check wiring and reset.")
     except KeyboardInterrupt:
         print("Connection closed by client")
     client_socket.close()
-
-# Start the ESP32 client in a background thread
+    
+    
+# Start ESP32 Client in Background
 if "client_thread" not in st.session_state:
     st.session_state.client_thread = threading.Thread(target=run_client, daemon=True)
     st.session_state.client_thread.start()
-    
 
 # Streamlit UI Logic
 if photo:
