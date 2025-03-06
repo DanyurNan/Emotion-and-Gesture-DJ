@@ -19,19 +19,9 @@ The project demonstrates how AI, IoT, and human-computer interaction can be comb
 
 ---
 
-
-### Software
-- Python 3.10.11 or higher
-- Streamlit (`pip install streamlit`)
-- DeepFace (`pip install deepface`)
-- PyTorch (`pip install torch`)
-- Audiocraft (`pip install git+https://github.com/facebookresearch/audiocraft.git`)
-- Keyboard (`pip install keyboard`)
-- Sound module (custom or external library for sound synthesis)
-
 ### Hardware
 - ESP32 device with gesture sensors (e.g., touch sensors, accelerometer).
-- A computer with a webcam for capturing images.
+- A computer with a webcam for capturing images and with a GPU (recommended).
 
 ---
 
