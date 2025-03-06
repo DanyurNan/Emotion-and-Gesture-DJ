@@ -4,9 +4,9 @@ import keyboard
 import sound
 import threading
 
-ESP32_IP = '192.168.107.3' 
+ESP32_IP = '192.168.217.79' 
 PORT = 10000
-NOTE_PRESSES = [60, 62, 64]
+NOTE_PRESSES = [60, 62, 64, 65, 67, 69]
 
 def run_client(): #CALLED WHEN GUI IS CALLED, SHOULD RUN IN THE BACKGROUND AS THREAD
     synth = sound.Synth()
