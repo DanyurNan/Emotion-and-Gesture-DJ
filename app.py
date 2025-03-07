@@ -11,6 +11,7 @@ import time
 import threading
 import sound
 import keyboard
+import random
 
 
 # Constants for ESP32 communication
@@ -24,6 +25,18 @@ SCALE_MAPPINGS = {
     'major': [[0, 2, 4, 5, 7], [0, 4, 7, 11, 12], [5, 7, 9, 10, 12]],
     'minor': [[0, 2, 3, 5, 7], [0, 3, 7, 8, 12], [5, 7, 8, 10, 12]]
 }
+
+PATTERN_MAPPING = {
+    'happy': 'major',
+    'sad': 'minor',
+    'angry': 'minor',
+    'neutral': 'major',
+    'surprise': 'major',
+    'fear': 'minor',
+    'disgust': 'minor'
+}
+KEYS = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+
 
 # Initialize Scale and Base Note
 base_note = KEY_OFFSET['C']
@@ -127,7 +140,6 @@ if photo:
         try:
             result = DeepFace.analyze(img_path=temp_img_path, actions=["emotion"])
             emotions = result[0]["emotion"]
-            dominant_emotion = max(emotions, key=emotions.get)
         except Exception as e:
             st.error(f"Error analyzing image: {e}")
             st.stop()
@@ -138,8 +150,20 @@ if photo:
             st.write(f"**{emotion.capitalize()}**: {score:.2f}%")
 
         # Generate Music Prompt
-        description = f"Generate a background track with no melody for a person feeling {dominant_emotion}"
-        st.session_state["music_description"] = description
+        description = ["Generate a background track with no melody for a person feeling "]
+        for emotion, score in emotions.items():
+            description.append(f"{emotion.capitalize()}: {score:.2f}% ")
+        
+        # Determine the dominant emotion and corresponding chord progression
+        dominant_emotion = max(emotions, key=emotions.get)
+        chord_progression = PATTERN_MAPPING.get(dominant_emotion, 'major')
+        
+        # Select a random key for the track
+        key = random.choice(KEYS)
+        
+        # Finalize the description
+        description.append(f"In the key of {key} {chord_progression}")
+        st.session_state["music_description"] = " ".join(description)
         
     clear_gpu_memory()
 
@@ -147,7 +171,7 @@ if photo:
     if st.button("Generate Music"):
         with st.spinner("Generating Music..."):
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(generate_music, description)
+                future = executor.submit(generate_music, st.session_state["music_description"])
                 music_file = future.result()
 
             if music_file:  # Check if music generation was successful
