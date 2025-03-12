@@ -8,7 +8,8 @@ from functools import partial
 from pywinstyles import set_opacity
 from audiocraft.models import MusicGen
 import threading
-from non_gui_func import generate_music, capture_emotions
+import non_gui_func as ngf
+import pygame_audio as pa
 
 
 def get_display_size(): #App dimensions related to screen resolution
@@ -36,7 +37,7 @@ class App(ctk.CTk):
         self.grid_columnconfigure((0,2), weight=0)
         self.grid_rowconfigure((1, 2), weight=1)
         
-        self.set_label = ctk.CTkLabel(self, text="Settings", font=ctk.CTkFont(size=40, weight="bold"))
+        self.set_label = ctk.CTkLabel(self, text="Emotion", font=ctk.CTkFont(size=40, weight="bold"))
         self.set_label.grid(row=0, column=2, pady=(20,10))
     #-----------------------------------------Left Sidebar-------------------------------------------------
         self.left_frame_width=int(self.width*0.2)
@@ -81,6 +82,12 @@ class App(ctk.CTk):
         self.genbutton = ctk.CTkButton(self.tabs.tab("Audiocraft"), fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command= lambda:threading.Thread(target=self.genbutton_click).start())
         self.genbutton.grid(row=2, column=2, padx=(10, 10), pady=(20, 20), sticky="sew")
 
+        self.audio_time = ctk.CTkSlider(self.tabs.tab("Audiocraft"), state="disabled", from_=0, to=1)
+        self.audio_time.grid(row=3, column=0, columnspan=2, padx=(10,10), pady=(10,10), sticky='ew')
+
+        self.play_button = ctk.CTkButton(self.tabs.tab("Audiocraft"), command= lambda:pa.pause_audio())
+        self.play_button.grid(row=3, column=2, padx=(10,10), pady=(10,10), sticky="se")
+
         #Camera
         self.video_label = ctk.CTkLabel(self.tabs.tab("Camera"), width=int(self.width * 0.52), height=int(self.height * 0.7), text="Webcam Feed")
         self.video_label.grid(row=0, column=0, columnspan=3, padx=10, pady=10)
@@ -99,9 +106,16 @@ class App(ctk.CTk):
 
         self.cap = None
         
-    #-------------------------------------------Right Sidebar ------------------------------------------
+    #-------------------------------------------Right Sidebar------------------------------------------
         self.right_frame = ctk.CTkFrame(self, width=int(self.width * 0.2))
         self.right_frame.grid(row=1, column=2, rowspan=3, sticky="nsew")
+
+        self.emotion_label = ctk.CTkLabel(self.right_frame, text="Current Emotion", font=ctk.CTkFont(size=30), 
+                                       text_color=("gray10", "#DCE4EE"), fg_color="#3B3B3B", corner_radius=5)
+        self.emotion_label.grid(row=0, padx=(20,20), pady=(20,10), sticky="new")
+        self.current_emotions = ctk.CTkTextbox(self.right_frame, wrap="word", font=ctk.CTkFont(size=15), text_color=("gray10", "#DCE4EE"))
+        self.current_emotions.insert("end", "No Emotions Detected")
+        self.current_emotions.grid(row=1, padx=(20,20), sticky="nsew")
 
     #---------------------------------------------Functions-------------------------------------------------
     def initialize_model(self):
@@ -109,33 +123,35 @@ class App(ctk.CTk):
         model.set_generation_params(duration=7) 
         return model
 
-    def button_click(self, button): #Changes button color when clicked
+    def button_click(self, button): #Changes button color when clicked, to be modified for gesture mode
         button.configure(fg_color="gray30")
     
     def genbutton_click(self):
+        success = 0
         self.genbutton.configure(state="disabled")
-        if self.cap:
-            self.stop_webcam()
-            emotions, prompt = capture_emotions(self.camera_frame)
-            for emotion, score in emotions.items():
-                print(f"**{emotion.capitalize()}**: {score:.2f}%")
-            generate_music(self.model, description=prompt)
-            self.cap.release()
-        elif self.camera_frame is not None:
-            emotions, prompt = capture_emotions(self.camera_frame)
-            for emotion, score in emotions.items():
-                print(f"**{emotion.capitalize()}**: {score:.2f}%")
-            generate_music(self.model, description=prompt)
-        else:
-            self.start_webcam()
-            self.stop_webcam()
-            self.cap = cv2.VideoCapture(0)
-            emotions, prompt = capture_emotions(self.camera_frame)
-            for emotion, score in emotions.items():
-                print(f"**{emotion.capitalize()}**: {score:.2f}%")
-            music_path = generate_music(self.model, description=prompt)
-            self.music_path.append(music_path)
+        self.current_emotions.delete('1.0', 'end')
+        while not success:
+            if self.cap:
+                self.stop_webcam()
+                success, emotions, prompt = ngf.capture_emotions(self.camera_frame)
+            elif self.camera_frame is not None:
+                success, emotions, prompt = ngf.capture_emotions(self.camera_frame)
+            else:
+                self.start_webcam()
+                self.stop_webcam()
+            success, emotions, prompt = ngf.capture_emotions(self.camera_frame)
+            self.camera_frame = None
+        for emotion, score in emotions.items():
+            self.current_emotions.insert("end", f"**{emotion.capitalize()}**: {score:.2f}%\n")
+        music_path = ngf.generate_music(self.model, description=prompt, index=len(self.music_path))
+        self.music_path.append(music_path)
         self.genbutton.configure(state="normal")
+        pa.play_audio(self.music_path[-1])
+
+    def audio_slider(self, audio_path): # Currently Non Functional
+        duration_ms = ngf.get_wav_length(audio_path) * 10000
+        self.audio_time.configure(from_=0, to=duration_ms, state='normal')
+
 
     def start_webcam(self):
         self.start_button.configure(state="disabled")
@@ -174,8 +190,9 @@ class App(ctk.CTk):
         self.gesture_frame.grid_remove()
         self.gesture_close.destroy()
 
-width, height, gui_size = get_display_size()
-app = App(width, height)
-app.geometry(gui_size)
-app.resizable(0, 0) #Non resizable window
-app.mainloop()
+if __name__ == "__main__":
+    width, height, gui_size = get_display_size()
+    app = App(width, height)
+    app.geometry(gui_size)
+    app.resizable(0, 0) #Non resizable window
+    app.mainloop()
