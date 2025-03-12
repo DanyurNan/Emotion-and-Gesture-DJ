@@ -26,6 +26,7 @@ SCALE_MAPPINGS = {
     'minor': [[0, 2, 3, 5, 7], [0, 3, 7, 8, 12], [5, 7, 8, 10, 12]]
 }
 
+# Emotion Scale Mappings
 PATTERN_MAPPING = {
     'happy': 'major',
     'sad': 'minor',
@@ -91,33 +92,47 @@ def generate_music(description, output_dir="generated_music"):
 def run_client():
     """Handles ESP32 communication in a background thread."""
     global mapping
-    synth = sound.Synth()
+    synth = sound.Synth() # Initialize Soundfont Script
+
+    # Connect to ESP32 Server
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((ESP32_IP, PORT))
     print("Connected to ESP32 server")
+
+    # Check for ESP32 Messages
     try:
         while True:
+
+            # Reset Sensors if Disconnected
             if keyboard.is_pressed('space'):
                 client_socket.send("r".encode())
                 print("Resetting sensors")
             data = client_socket.recv(1024)
             if not data:
                 break
+
             message = data.decode().strip()
+
+            # Check for Finger Movement
             if message.startswith("press"):
                 sensor_index = int(message.split()[1])
                 note_to_play = base_note + mapping[sensor_index]
-                threading.Thread(target=synth.play_note, args=(note_to_play,)).start()
+                threading.Thread(target=synth.play_note, args=(note_to_play,)).start() # Converts Finger Number to Pitch using Mapping
                 st.session_state["note_to_play"] = note_to_play
+
+            # Check for Hand Swipes to Change Note Mapping
             elif message == "swipe left":
                 mapping = SCALE_MAPPINGS[scale][0]
             elif message == "swipe right":
                 mapping = SCALE_MAPPINGS[scale][2]
             elif message == "swipe forward":
                 mapping = SCALE_MAPPINGS[scale][1]
+
+            # Displays Message if Sensor is Disconnected
             elif message.startswith("disconnected"):
                 sensor_id = message.split()[1]
                 print(f"Sensor {sensor_id} is disconnected. Check wiring and reset.")
+                
     except KeyboardInterrupt:
         print("Connection closed by client")
     client_socket.close()
