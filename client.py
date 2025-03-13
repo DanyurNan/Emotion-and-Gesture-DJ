@@ -17,15 +17,11 @@ SCALE_MAPPINGS = {'major': [[0,2,4,5,7], [0,4,7,11,12], [5,7,9,11,12]],
                   'minor': [[0,2,3,5,7], [0,3,7,8,12], [5,7,8,10,12]]}
 
 # Test Intialization of Key and Scale
-base_note = KEY_OFFSET['D']
+base_note = 'D'
 scale = 'major'
 mapping = SCALE_MAPPINGS[scale][0]
 
 running = True
-
-def change_key(gen_key, gen_scale):
-    base_note = KEY_OFFSET[gen_key]
-    scale = gen_scale
 
 def run_client():
     synth = sound.Synth() # Initialize Soundfont Script
@@ -52,8 +48,8 @@ def run_client():
 
         # Check for Finger Movement
         if message.split()[0] == "press":
-            print("Note press on sensor", message.split()[1] + ", Note", base_note + mapping[int(message.split()[1])]) # Converts Finger Number to Pitch using Mapping
-            threading.Thread(target=synth.play_note, args=(base_note + mapping[int(message.split()[1])],)).start()
+            print("Note press on sensor", message.split()[1] + ", Note", KEY_OFFSET[base_note] + mapping[int(message.split()[1])]) # Converts Finger Number to Pitch using Mapping
+            threading.Thread(target=synth.play_note, args=(KEY_OFFSET[base_note] + mapping[int(message.split()[1])],)).start()
 
         # Check for Hand Swipes to Change Note Mapping
         elif message == "swipe left":
@@ -73,10 +69,10 @@ def run_client():
     print("Connection closed by client")
     client_socket.close()
 
+#stops client once program closes
 def close_client():
     global running
     running = False
-
 
 if __name__ == "__main__":
     run_client()
