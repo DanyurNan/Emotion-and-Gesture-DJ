@@ -23,7 +23,7 @@ def generate_music(model, description, index, output_dir="generated_music"):
         # Generate the initial audio
         print('Generating Music...')
         start_time = time.time()
-        generated_wav = model.generate([description])  # Pass description as a list
+        generated_wav = model.generate([description], progress=True)  # Pass description as a list
 
         # Loop the audio 3 times
         wav_repeated = torch.cat([generated_wav[0]] * 3, dim=-1)  # Repeat the waveform
