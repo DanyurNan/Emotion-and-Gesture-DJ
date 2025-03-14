@@ -160,6 +160,7 @@ class App(ctk.CTk):
         desc = self.prompt_entry.get()
         self.prompt_entry.configure(state='disabled')
         while not self.success:
+            self.camera_frame = None
             if self.cap:
                 self.stop_webcam()
                 self.success, self.emotions, self.prompt = ngf.capture_emotions(self.camera_frame)
@@ -168,7 +169,7 @@ class App(ctk.CTk):
             else:
                 self.start_webcam()
                 self.stop_webcam()
-            self.camera_frame = None
+        self.camera_frame = None
         self.video_label.configure(image="", text="Music generating...! Please be patient while it generates.")
         music_path = ngf.generate_music(self.model, description=self.prompt + desc, index=len(self.music_path))
         self.success = 0
