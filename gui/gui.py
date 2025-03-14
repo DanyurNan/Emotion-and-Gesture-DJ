@@ -5,7 +5,6 @@ os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 import cv2
 from PIL import Image, ImageTk
 from functools import partial
-from pywinstyles import set_opacity
 from audiocraft.models import MusicGen
 import threading
 import non_gui_func as ngf
