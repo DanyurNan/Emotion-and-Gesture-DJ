@@ -62,7 +62,7 @@ class App(ctk.CTk):
                                  width=self.left_frame_width, border_width=2, fg_color="transparent", text_color=("gray10", "#DCE4EE"))
         self.gesture_desc = ctk.CTkTextbox(self.left_frame, height=self.height*0.3, wrap="word", font=ctk.CTkFont(size=15), text_color=("gray10", "#DCE4EE"))        
         self.gesture_desc.insert("end", "With the gesture glove on, press down on any of your 5 fingers to play a sound\n\n")
-        self.gesture_desc.insert("end", "The gesture glove has 4 states, determined by swiping in the Left, Right, Up, and Down directions.\n\n")
+        self.gesture_desc.insert("end", "The gesture glove has 3 states, determined by swiping in the Left, Right, and Forwards directions.\n\n")
         self.gesture_desc.insert("end", "Each state will have 5 different unique notes, all of which are also determined by the emotion captured to line up with the music generated.")
         self.gesture_desc.configure(state='disabled')
 
