@@ -81,7 +81,7 @@ def get_wav_length(file_path):
 if __name__ == "__main__":
     model = MusicGen.get_pretrained("facebook/musicgen-small")
     model.set_generation_params(duration=7) 
-    duration = get_wav_length("C:/Users/erice/Desktop/audiocraft/generated_music/gen_looped.wav")
-    print(f"The duration of the audio file is: {duration} seconds")
     apath = generate_music(model, "lol", 0)
+    duration = get_wav_length(apath)
+    print(f"The duration of the audio file is: {duration} seconds")
     print(apath)
