@@ -7,8 +7,8 @@ from PIL import Image, ImageTk
 from functools import partial
 from audiocraft.models import MusicGen
 import threading
-import non_gui_func as ngf
-import pygame_audio as pa
+import gui_helpers.non_gui_func as ngf
+import gui_helpers.pygame_audio as pa
 from client import run_client, close_client
 
 
@@ -98,7 +98,8 @@ class App(ctk.CTk):
         self.play_button.configure(state='disabled')
 
         #Camera
-        self.video_label = ctk.CTkLabel(self.tabs.tab("Emotion - Gesture Controlled Music"), width=int(self.width * 0.50), height=int(self.height * 0.67), text="Turn on webcam to get started!")
+        self.video_label = ctk.CTkLabel(self.tabs.tab("Emotion - Gesture Controlled Music"), width=int(self.width * 0.50), height=int(self.height * 0.67), text="Turn on webcam to get started!",
+                                        wraplength=self.width*0.4, font=ctk.CTkFont(size=30), text_color=("gray10", "#DCE4EE"), fg_color="#3B3B3B", corner_radius=5)
         self.video_label.grid(row=0, column=0, columnspan=4, padx=(10, 10), pady=(10, 10), sticky='nsew')
         self.cap = None
 
@@ -170,7 +171,7 @@ class App(ctk.CTk):
                 self.start_webcam()
                 self.stop_webcam()
         self.camera_frame = None
-        self.video_label.configure(image="", text="Music generating...! Please be patient while it generates.")
+        self.video_label.configure(image="", text="Music generating...! \nPlease be patient while it generates.")
         music_path = ngf.generate_music(self.model, description=self.prompt + desc, index=len(self.music_path))
         self.success = 0
         self.music_path.append(music_path)
@@ -178,7 +179,7 @@ class App(ctk.CTk):
         self.play_button.configure(state='normal')
         pa.play_audio(self.music_path[-1])
         self.set_volume(self.volume_slider.get())
-        self.video_label.configure(text="Music generated! Please enjoy the music or turn on webcam to start again.")
+        self.video_label.configure(text="Music generated! \nPlease enjoy the music or turn on webcam to start again.")
         self.prompt_entry.configure(state='normal')
 
     def set_volume(self, vol):
