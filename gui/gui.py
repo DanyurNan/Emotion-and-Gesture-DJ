@@ -54,7 +54,7 @@ class App(ctk.CTk):
                                  width=self.left_frame_width, border_width=2, fg_color="transparent", text_color=("gray10", "#DCE4EE"))
         self.music_desc = ctk.CTkTextbox(self.left_frame, height=self.height*0.3, wrap="word", font=ctk.CTkFont(size=15), text_color=("gray10", "#DCE4EE"))
         self.music_desc.insert("end", "Click the Start Webcam Button on the bottom left to get started... Or dont!")
-        self.music_desc.insert("end", "If the Webcam is off and the Generate button is clicked, it will briefly turn on to capture an image then stop again right away")
+        self.music_desc.insert("end", " If the Webcam is off and the Generate button is clicked, it will briefly turn on to capture an image then stop again right away")
         self.music_desc.insert("end", "\n\nAfter the music is generated, click play and enjoy! The generated music will loop forever until it gets replaced by generating more")
         self.music_desc.configure(state='disabled')
         
@@ -71,10 +71,10 @@ class App(ctk.CTk):
         self.gesture_tutorial_label.grid(row=2,column=0, columnspan=2, padx=(20,20), pady=(20,10))
         self.gesture_desc.grid(row=3, column=0, columnspan=2, sticky='nsew', padx=(20,20))
 
-        self.start_button = ctk.CTkButton(self.left_frame, text="Start Webcam", width=self.width*0.05, fg_color="transparent", border_width=2, 
+        self.start_button = ctk.CTkButton(self.left_frame, text="Start Webcam", fg_color="transparent", border_width=2, 
                                        text_color=("gray10", "#DCE4EE"), command=self.start_webcam)
         self.start_button.grid(row=4, column=0, padx=(10, 10), pady=15)    
-        self.stop_button = ctk.CTkButton(self.left_frame, text="Stop Webcam", width=self.width*0.05, fg_color="transparent", border_width=2, 
+        self.stop_button = ctk.CTkButton(self.left_frame, text="Stop Webcam", fg_color="transparent", border_width=2, 
                                        text_color=("gray10", "#DCE4EE"), command=self.stop_webcam, state="disabled")
         self.stop_button.grid(row=4, column=1, padx=(10, 10), pady=15)
 
@@ -157,7 +157,6 @@ class App(ctk.CTk):
 
     def genbutton_click(self):
         self.genbutton.configure(state="disabled")
-        self.video_label.configure(image=None, text="Music generating...! Please be patient while it generates.")
         desc = self.prompt_entry.get()
         while not self.success:
             if self.cap:
@@ -169,13 +168,15 @@ class App(ctk.CTk):
                 self.start_webcam()
                 self.stop_webcam()
             self.camera_frame = None
+        self.video_label.configure(image="", text="Music generating...! Please be patient while it generates.")
         music_path = ngf.generate_music(self.model, description=self.prompt + desc, index=len(self.music_path))
+        self.success = 0
         self.music_path.append(music_path)
         self.genbutton.configure(state="normal")
         self.play_button.configure(state='normal')
         pa.play_audio(self.music_path[-1])
         self.set_volume(self.volume_slider.get())
-        self.video_label.configure(image=None, text="Music generated! Please enjoy the music or turn on webcam to start again.")
+        self.video_label.configure(text="Music generated! Please enjoy the music or turn on webcam to start again.")
 
     def set_volume(self, vol):
         pa.volume_set(vol)
