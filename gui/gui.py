@@ -158,6 +158,7 @@ class App(ctk.CTk):
     def genbutton_click(self):
         self.genbutton.configure(state="disabled")
         desc = self.prompt_entry.get()
+        self.prompt_entry.configure(state='disabled')
         while not self.success:
             if self.cap:
                 self.stop_webcam()
@@ -177,6 +178,7 @@ class App(ctk.CTk):
         pa.play_audio(self.music_path[-1])
         self.set_volume(self.volume_slider.get())
         self.video_label.configure(text="Music generated! Please enjoy the music or turn on webcam to start again.")
+        self.prompt_entry.configure(state='normal')
 
     def set_volume(self, vol):
         pa.volume_set(vol)
