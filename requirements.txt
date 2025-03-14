@@ -3,3 +3,6 @@ audioread==3.0.1
 av==11.0.0
 deepface==0.0.93
 streamlit==1.22.0
+tinysoundfont==0.3.6
+keyboard==0.13.5
+numpy==1.26.4
